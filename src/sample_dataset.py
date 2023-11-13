@@ -107,7 +107,20 @@ def interpolation_sample(dataset_name, model_root_dir, outdir='inversion_data/ci
         _, y_train = get_dataset(config, return_raw=True,
                                 resolution=save_resolution, train_only=True)
 
-        y_t = y_train[group_id*num_emb:(group_id+1)*num_emb]
+        config.num_classes = 10
+        tasks = [[0] * 10] * 10
+        tasks[group_id] = [68, 56, 78, 8, 23, 84, 90, 65, 74, 76]
+
+        cls_idx = {}
+        for i in range(10):
+            cls_idx[i] = np.where(y_train == tasks[0][i])[0][0:num_emb // config.num_classes]
+
+        y_t = np.concatenate([y_train[idx] for k, idx in cls_idx.items()], axis=0)
+
+        config.test_size = 100
+        config.train_size = 5000
+
+        #y_t = y_train[group_id*num_emb:(group_id+1)*num_emb]
         emb_path = os.path.join(
             model_root_dir, f'group{group_id}', f'learned_embeds-steps-{train_steps*2}.bin')
     
@@ -152,7 +165,10 @@ def interpolation_sample(dataset_name, model_root_dir, outdir='inversion_data/ci
                     img.save(
                         f'{root_name}/class_{group_id:03d}/{config_name}/{name[idx]}.png')
     else:
-        cls_mapping = {i: [] for i in range(num_classes)}
+        tasks = [[0] * 10] * 10
+        tasks[group_id] = [68, 56, 78, 8, 23, 84, 90, 65, 74, 76]
+
+        cls_mapping = {tasks[group_id][i]: [] for i in range(num_classes)}
         for i in range(len(y_t)):
             cls_mapping[y_t[i]].append(i)
         all_ids = list(range(num_emb))
@@ -199,6 +215,7 @@ def interpolation_sample(dataset_name, model_root_dir, outdir='inversion_data/ci
             for idx, img in enumerate(images):
                 img = img.resize((save_resolution, save_resolution),
                                 resample=PIL_INTERPOLATION[interpolation])
+                os.makedirs(f'{root_name}/class_{lb[idx]:03d}/{config_name}', exist_ok=True) 
                 img.save(
                     f'{root_name}/class_{lb[idx]:03d}/{config_name}/group{group_id:03d}_{name[idx]}.png')
     

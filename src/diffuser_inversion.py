@@ -830,8 +830,8 @@ def main():
                         torch_dtype=weight_dtype,
                         avg_uncond_embeddings=True,
                     )
-                    save_image(pipeline, args.output_dir, global_step,
-                               args.num_emb, accelerator.device, args.resolution)
+                    #save_image(pipeline, args.output_dir, global_step,
+                    #           args.num_emb, accelerator.device, args.resolution)
                     del pipeline
                     
             logs = {"loss": loss.detach().item(

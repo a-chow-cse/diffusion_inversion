@@ -39,7 +39,7 @@ conda activate di
 
 ```bash
 path="--pretrained_model_name_or_path=CompVis/stable-diffusion-v1-4 --output_dir=$PROJDIR/diffusion_inversion/logs/stl10 --dataset_name=stl10 --data_dir=~/tensorflow_datasets"
-args="--gradient_accumulation_steps=1 --num_tokens=5 --resolution=256 --train_batch_size=50 --num_emb=100 --max_train_steps=8000"
+args="--gradient_accumulation_steps=1 --num_tokens=5 --resolution=128 --train_batch_size=50 --num_emb=100 --max_train_steps=8000"
 lr="--lr_warmup_steps=0 --interpolation=bicubic --lr_scheduler=constant --learning_rate=3e-02"
 log="--checkpointing_steps=1000 --save_steps=1000 --save_image_steps=400 --resume_from_checkpoint=latest"
 
@@ -47,19 +47,19 @@ accelerate launch src/diffuser_inversion.py $path $args $lr $log --group_id=0
 ...
 accelerate launch src/diffuser_inversion.py $path $args $lr $log --group_id=50
 ```
-
+CUDA_VISIBLE_DEVICES=5,6,7 accelerate launch src/diffuser_inversion.py --group_id=0 --pretrained_model_name_or_path=CompVis/stable-diffusion-v1-4 --output_dir=./logs/cifar100 --dataset_name=cifar100 --data_dir=~/tensorflow_datasets --gradient_accumulation_steps=1 --num_tokens=5 --resolution=128 --train_batch_size=8 --num_emb=450 --max_train_steps=8000 --lr_warmup_steps=0 --interpolation=bicubic --lr_scheduler=constant --learning_rate=3e-02 --checkpointing_steps=1000 --save_steps=1000 --save_image_steps=400 --resume_from_checkpoint=latest
 ### Sampling
 
 ```bash
 path="--dataset_name=stl10 --model_root_dir=$PROJDIR/diffusion_inversion/logs/stl10/res256_bicubic/emb100_token5_lr0.03_constant --dm_name=CompVis/stable-diffusion-v1-4"
 train_config="--emb_ch=768 --num_tokens=5 --num_classes=10 --num_emb=100 --sampling_resolution=256 --save_resolution=96  --outdir=$PROJDIR/inversion_data/stl10/scaling"
-sampling_config="--num_inference_steps=100 --batch_size=100 --interpolation_strength=0.1 --num_samples=5 --emb_noise=0.1 --train_steps=3000 --seed=42"
+sampling_config="--num_inference_steps=100 --batch_size=20 --interpolation_strength=0.1 --num_samples=5 --emb_noise=0.1 --train_steps=3000 --seed=42"
 
 python sample_dataset.py $path $train_config $sampling_config --group_id=0
 ...
 python sample_dataset.py $path $train_config $sampling_config --group_id=50
 ```
-
+python src/sample_dataset.py --group_id=0 --num_inference_steps=100 --batch_size=20 --interpolation_strength=0.1 --num_samples=5 --emb_noise=0.1 --train_steps=4000 --seed=42 --emb_ch=768 --num_tokens=5 --num_classes=10 --num_emb=450 --sampling_resolution=128 --save_resolution=128  --outdir=./inversion_data/cifar100/scaling2000 --dataset_name=cifar100 --model_root_dir=./logs/cifar100/res128_bicubic/emb450_token5_lr0.03_constant/ --dm_name=CompVis/stable-diffusion-v1-4
 ### Evaluation
 ```bash
 path="--output=$PROJDIR/project/diffusion_inversion/arch"

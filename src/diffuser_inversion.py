@@ -30,6 +30,7 @@ from packaging import version
 from PIL import Image
 from tqdm.auto import tqdm
 from transformers import CLIPTextModel, CLIPTokenizer
+import torch.backends.cuda
 
 import medmnist
 from medmnist import INFO
@@ -233,7 +234,7 @@ def parse_args():
         "--center_crop", action="store_true", help="Whether to center crop images before resizing to resolution"
     )
     parser.add_argument(
-        "--train_batch_size", type=int, default=16, help="Batch size (per device) for the training dataloader."
+        "--train_batch_size", type=int, default=2, help="Batch size (per device) for the training dataloader."
     )
     parser.add_argument("--num_train_epochs", type=int, default=100)
     parser.add_argument(
@@ -364,7 +365,7 @@ def parse_args():
     return args
 
 
-def load_data(ds, batch_size=1000):
+def load_data(ds, batch_size):
     ds = ds.batch(batch_size=batch_size)
     x_list = []
     y_list = []
@@ -473,8 +474,23 @@ class EmbDataset(Dataset):
                 config, return_raw=True, resolution=size, train_only=True)
 
             if group_id is not None:
-                x_t = x_train[group_id*num_emb:(group_id+1)*num_emb]
-                y_t = y_train[group_id*num_emb:(group_id+1)*num_emb]
+                config.num_classes = 10
+                tasks = [[0] * 10] * 10
+                tasks[group_id] = [68, 56, 78, 8, 23, 84, 90, 65, 74, 76]
+
+                cls_idx = {}
+                for i in range(10):
+                    cls_idx[i] = np.where(y_train == tasks[0][i])[0][0:num_emb // config.num_classes]
+
+                x_t = np.concatenate([x_train[idx] for k, idx in cls_idx.items()], axis=0)
+                y_t = np.concatenate([y_train[idx] for k, idx in cls_idx.items()], axis=0)
+
+                config.test_size = 100
+                config.train_size = 5000
+
+
+                #x_t = x_train[group_id*num_emb:(group_id+1)*num_emb]
+                #y_t = y_train[group_id*num_emb:(group_id+1)*num_emb]
             else:
                 cls_idx = {}
                 for i in range(config.num_classes):
@@ -534,7 +550,7 @@ def main():
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         mixed_precision=args.mixed_precision,
         log_with=args.report_to,
-        logging_dir=logging_dir,
+        project_dir=logging_dir,
     )
 
     # Make one log on every process with the configuration for debugging.
@@ -546,11 +562,11 @@ def main():
     logger.info(accelerator.state, main_process_only=False)
     if accelerator.is_local_main_process:
         datasets.utils.logging.set_verbosity_warning()
-        transformers.utils.logging.set_verbosity_warning()
+        transformers.logging.set_verbosity_warning()
         diffusers.utils.logging.set_verbosity_info()
     else:
         datasets.utils.logging.set_verbosity_error()
-        transformers.utils.logging.set_verbosity_error()
+        transformers.logging.set_verbosity_error()
         diffusers.utils.logging.set_verbosity_error()
 
     # If passed along, set the training seed now.

@@ -26,8 +26,8 @@ from transformers import CLIPFeatureExtractor, CLIPTextModel, CLIPTokenizer
 
 from diffusers.configuration_utils import FrozenDict, ConfigMixin, register_to_config
 from diffusers.models import AutoencoderKL, UNet2DConditionModel
-from diffusers.modeling_utils import ModelMixin
-from diffusers.pipeline_utils import DiffusionPipeline
+from diffusers.models.modeling_utils import ModelMixin
+from diffusers.pipelines.pipeline_utils import DiffusionPipeline
 from diffusers.schedulers import (
     DDIMScheduler,
     DPMSolverMultistepScheduler,

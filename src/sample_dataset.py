@@ -180,7 +180,7 @@ def interpolation_sample(dataset_name, model_root_dir, outdir='inversion_data/ci
         config_name = f'tstep{train_steps}_infstep{num_inference_steps}_gs{guidance_scale}_noise{emb_noise}_itep{interpolation_strength}_seed{seed}'
         print(f'>> Generate data for {root_name}/{config_name}')
         for i in range(num_classes):
-            os.makedirs(f'{root_name}/class_{i:03d}/{config_name}', exist_ok=True)
+            os.makedirs(f'{root_name}/class_{tasks[group_id][i]:03d}/{config_name}', exist_ok=True)
         prompt = []
         label_list = []
         name_list = []

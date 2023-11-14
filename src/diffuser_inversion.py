@@ -693,6 +693,8 @@ def main():
     # Afterwards we recalculate our number of training epochs
     args.num_train_epochs = math.ceil(
         args.max_train_steps / num_update_steps_per_epoch)
+    args.num_train_epochs=args.max_train_steps
+    args.max_train_steps=num_update_steps_per_epoch*args.num_train_epochs
 
     # We need to initialize the trackers we use, and also store our configuration.
     # The trackers initializes automatically on the main process.

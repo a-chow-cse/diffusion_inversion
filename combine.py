@@ -1,30 +1,27 @@
 from PIL import Image
 import os
+import random
 
 # Define the folder path containing the images
-folder_path = '/home/chowdhury.150/Projects/cl_dm/diffusion_inversion/inversion_data/cifar100/scaling2000/res128_bicubic/class_068/tstep4000_infstep100_gs2.0_noise0.1_itep0.1_seed42'
+folder_path = '/home/chowdhury.150/Projects/cl_dm/diffusion_inversion/inversion_data/cifar100/scaling20_embd_32/res32_bicubic/class_068/tstep4500_infstep100_gs2.0_noise0.1_itep0.1_seed42'
 
 # Get a list of image filenames in the folder
 image_files = [f for f in os.listdir(folder_path) if f.endswith('.png')]
+#image_files = random.sample(image_files, 100)
 
-# Create a list to store individual image objects
 images = []
 
-# Open and append each image to the 'images' list
+
 for image_file in image_files:
     image = Image.open(os.path.join(folder_path, image_file))
     images.append(image)
 
-# Get the dimensions of the first image (assuming all images have the same dimensions)
 width, height = images[0].size
 
-# Set the number of images per row
-images_per_row = 10
+images_per_row = 4
 
-# Calculate the number of rows
 num_rows = len(images) // images_per_row + (len(images) % images_per_row > 0)
 
-# Create a new blank image with the combined size
 combined_width = width * images_per_row
 combined_height = height * num_rows
 combined_image = Image.new('RGB', (combined_width, combined_height))
